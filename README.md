@@ -8,11 +8,11 @@
 collisions and then implement the leapfrog technique (https://en.wikipedia.org/wiki/Leapfrog_integration)
 for a better stability and improved rendering</p>
 
-<p>The file [elastic-collisions-in-3d](https://boutoukoat.github.io/elastic-collisions-in-3d.html) shows the trajectory of colliding spheres of variable size, with an initial random speed</p>
+<p>The file [elastic_collisions_in_3d](https://boutoukoat.github.io/elastic_collisions_in_3d.html) shows the trajectory of colliding spheres of variable size, with an initial random speed</p>
 
 <p>The file [attraction_repulsion_3d](https://boutoukoat.github.io/attraction_repulsion_3d.html) shows a red sphere attracting green spheres while the green spheres repulse themselves, all together constrained in a cube.</p>
 
-<p>The file [repulsion_3d](https://boutoukoat.github.io/repulsion_3d.html) shows a variable number of repulsing green spheres with an initial random speed, constrained in a sphere. 4 spheres should converge to the vertices of a regular tetrapod. Will this stabilize numerically ? 8 spheres should converge to the corners of a cube. </p>
+<p>The file [repulsion_3d](https://boutoukoat.github.io/repulsion_3d.html) shows a variable number of repulsing green spheres with an initial random speed, constrained in a sphere. 4 spheres should converge to the vertices of a regular tetrapod. Will this stabilize numerically ? 8 spheres should converge to the corners of a cube. Will this be numeroically stable ?</p>
 
 # Fixed bugs
  
