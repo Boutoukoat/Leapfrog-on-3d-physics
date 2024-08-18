@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Elastic attractions and repulsions in 3D</title>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<meta name=author content="Paul Masson">
+<style>
+
+	body { margin: 0px; overflow: hidden; }
+
+</style>
+</head>
+
+<body>
+
+
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r100/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r100/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+
+	function randrange(a, b) {
+	    return a + Math.random() * (b - a);
+	}
+
+	var stats = new Stats();
+	stats.setMode(0);
+
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.left = '0';
+	stats.domElement.style.top = '0';
+
+	// declare once and modify
+	var next_p = new THREE.Vector3();
+	var plus = new THREE.Vector3();
+	var minus = new THREE.Vector3();
+	var separation = new THREE.Vector3();
+	var normal = new THREE.Vector3();
+	var normal1 = new THREE.Vector3();
+	var normal2 = new THREE.Vector3();
+	var relativeVelocity = new THREE.Vector3();
+
+	var count = 23; // integer : number of balls
+	var range = 5.0; // size of enclosing box in rendering units
+	var small_radius = 0.5; // size of small balls
+        var large_radius = 1.0;
+	var speed = .02 ; // speed of balls
+        var attraction = 0.02;
+        var repulsion = 0.03;
+        var amortize = 0.5;
+
+	var scene = new THREE.Scene();
+
+	var renderer = new THREE.WebGLRenderer({
+	    antialias: true
+	});
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x000000, 1);
+	document.body.appendChild(renderer.domElement);
+	document.body.appendChild(stats.domElement);
+
+
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+	camera.up.set(0, 0, 1);
+	camera.position.set(3 * range, 3.5 * range, 2.0 * range);
+
+	var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+	window.addEventListener('resize', function() {
+
+	    renderer.setSize(window.innerWidth, window.innerHeight);
+	    camera.aspect = window.innerWidth / window.innerHeight;
+	    camera.updateProjectionMatrix();
+
+	});
+
+	var box = new THREE.Geometry();
+	box.vertices.push(new THREE.Vector3(-range, -range, -range));
+	box.vertices.push(new THREE.Vector3(range, range, range));
+	var boxMesh = new THREE.Line(box);
+	scene.add(new THREE.BoxHelper(boxMesh, 'white'));
+
+	var light = new THREE.DirectionalLight(0xffffff, .8);
+	// light.position.set(-range, range, 0);
+	light.position.set(-2 * range, range, 0);
+	camera.add(light);
+	scene.add(camera);
+
+	var ambient = new THREE.AmbientLight(0x555555);
+	scene.add(ambient);
+
+
+	var balls = [];
+
+	var geometry = new THREE.SphereGeometry(large_radius, 35, 35);
+	var material = new THREE.MeshPhongMaterial();
+	material.color = new THREE.Color('#ff0000');
+	var large_ball = new THREE.Mesh(geometry, material);
+	    
+        large_ball.r = large_radius;
+	large_ball.m = large_radius ** 3;
+        large_ball.position.set(0, 0, 0);
+        large_ball.a = new THREE.Vector3(0, 0, 0);
+        large_ball.v = new THREE.Vector3(0, 0, 0);
+        large_ball.next_v = new THREE.Vector3(0, 0, 0);
+
+	balls.push(large_ball);
+	scene.add(large_ball);
+
+
+	for (var i = 1; i < count; i++) {
+
+	    geometry = new THREE.SphereGeometry(small_radius, 20, 20);
+	    material = new THREE.MeshPhongMaterial();
+	    material.color = new THREE.Color('#00ff00');
+	    var b1 = new THREE.Mesh(geometry, material);
+
+	    // small radius
+	    b1.r = small_radius;
+
+	    // mass proportional to the cube of the radius
+	    b1.m = small_radius ** 3;
+
+	    // random position
+	    b1.position.set(randrange(-range + small_radius, range - small_radius),
+	        randrange(-range + small_radius, range - small_radius),
+	        randrange(-range + small_radius, range - small_radius));
+
+	    // random velocity
+	    b1.next_v = new THREE.Vector3(randrange(-speed, speed),
+	        randrange(-speed, speed),
+	        randrange(-speed, speed));
+
+	    // b1.next_v.set(0,0,0);
+	    b1.v = new THREE.Vector3(0,0,0);
+	    b1.v.copy(b1.next_v);
+	    b1.a = new THREE.Vector3(0,0,0);
+
+	    // check overlapping balls, move their centers away
+	    for (var j = 0; j < i; j++) {
+
+	        var b2 = balls[j];
+	        var mindistance = b1.r + b2.r;
+
+	        // check overlap
+	        separation.copy(b1.position).sub(b2.position);
+	        // simple check first
+	        if (Math.abs(separation.x) <= mindistance &&
+	                Math.abs(separation.y) <= mindistance &&
+	                Math.abs(separation.z) <= mindistance) {
+
+
+	        // check overlapping balls, move their centers away (best effort)
+	        var len = separation.length();
+	        if (len < mindistance) {
+	            normal.copy(separation).normalize();
+	            var delta = mindistance - len;
+	            normal = normal.multiplyScalar(delta / 2.0);
+	            b1.position.add(normal);
+	            b2.position.sub(normal);
+	        }
+                }
+	    }
+
+	    balls.push(b1);
+	    scene.add(b1);
+
+	}
+
+	function render() {
+
+	    requestAnimationFrame(render);
+	    renderer.render(scene, camera);
+	    stats.update();
+
+	    for (var i = 0; i < count; i++) {
+
+	        var b1 = balls[i];
+
+	        for (var j = i + 1; j < count; j++) {
+
+	            var b2 = balls[j];
+	            var mindistance = b1.r + b2.r;
+
+	            // check overlap
+	            separation.copy(b1.position).sub(b2.position);
+	            // simple check first
+	            if (Math.abs(separation.x) <= mindistance &&
+	                Math.abs(separation.y) <= mindistance &&
+	                Math.abs(separation.z) <= mindistance) {
+
+	                // exact check of overlapping balls
+	                // and move their positions away
+	                var len = separation.length();
+	                if (len < mindistance) {
+	                    normal.copy(separation).normalize();
+	                    var delta = mindistance - len;
+	                    normal = normal.multiplyScalar(delta / 2.0);
+	                    b1.position.add(normal);
+	                    b2.position.sub(normal);
+	                }
+	            }
+
+
+	            // check collision
+	            separation.copy(b1.position).add(b1.v).add(b1.a).sub(b2.position).sub(b2.v).sub(b2.a);
+	            // simple check first
+	            if (Math.abs(separation.x) <= mindistance &&
+	                Math.abs(separation.y) <= mindistance &&
+	                Math.abs(separation.z) <= mindistance) {
+
+	                // exact check of collision
+	                // exchange normal weighted velocities, leave tangential alone
+	                if (separation.length() < mindistance) {
+	                    // normal direction of impact
+	                    normal.copy(b2.position).sub(b1.position).normalize();
+	                    // impact speed
+	                    relativeVelocity.copy(b1.v).sub(b2.v);
+	                    var mdot = 2.0 * relativeVelocity.dot(normal) / (b1.m + b2.m) * amortize;
+	                    normal1.copy(normal).multiplyScalar(mdot * b2.m);
+	                    normal2.copy(normal).multiplyScalar(mdot * b1.m);
+	                    b1.next_v.sub(normal1);
+	                    b2.next_v.add(normal2);
+	                }
+	            }
+
+	        }
+                b1.a.set(0,0,0);
+	    }
+	    for (var i = 1; i < count; i++) 
+            {
+	        var b1 = balls[i];
+	        var b2 = balls[0];
+	        separation.copy(b1.position).sub(b2.position);
+	        var distance = separation.length();
+                separation.multiplyScalar(attraction*b1.m*b2.m/(distance * distance * distance));
+                b1.a.sub(separation);
+                b2.a.add(separation);
+	        for (var j = i + 1; j < count; j++) 
+                {
+	            b2 = balls[j];
+	            separation.copy(b1.position).sub(b2.position);
+	            distance = separation.length();
+                    separation.multiplyScalar(repulsion*b1.m*b2.m/(distance * distance * distance));
+                    b1.a.add(separation);
+                    b2.a.sub(separation);
+               }
+            }
+
+	    for (var i = 0; i < count; i++) {
+
+	        var b1 = balls[i];
+
+
+	        b1.next_v.add(b1.a);
+                b1.a.multiplyScalar(0.5);
+	        next_p.copy(b1.position).add(b1.next_v).add(b1.a);
+	        plus.copy(next_p).addScalar(b1.r);
+	        minus.copy(next_p).subScalar(b1.r);
+
+	        // reverse velocity components at walls
+
+	        if (plus.x > range) {
+	            b1.a.x = 0;
+	            b1.next_v.x = -b1.next_v.x * amortize;
+	            next_p.x = range - b1.r;
+	        } else if (minus.x < -range) {
+	            b1.a.x = 0;
+	            b1.next_v.x = -b1.next_v.x * amortize;
+	            next_p.x = -range + b1.r;
+	        }
+
+	        if (plus.y > range) {
+	            b1.a.y = 0;
+	            b1.next_v.y = -b1.next_v.y * amortize;
+	            next_p.y = range - b1.r;
+	        } else if (minus.y < -range) {
+	            b1.a.y = 0;
+	            b1.next_v.y = -b1.next_v.y * amortize;
+	            next_p.y = -range + b1.r;
+	        }
+
+	        if (plus.z > range) {
+	            b1.a.z = 0;
+	            b1.next_v.z = -b1.next_v.z * amortize;
+	            next_p.z = range - b1.r;
+	        } else if (minus.z < -range) {
+	            b1.a.z = 0;
+	            b1.next_v.z = -b1.next_v.z * amortize;
+	            next_p.z = -range + b1.r;
+	        }
+
+	        b1.position.copy(next_p);
+	        b1.v.copy(b1.next_v);
+	    }
+
+	}
+
+	render();
+</script>
+
+</body>
+</html>
