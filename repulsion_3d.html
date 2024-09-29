@@ -137,22 +137,19 @@ for (var i = 0; i < maxcount; i++) {
     // random position
     var pmin = -range / 2 + radius;
     var pmax = range / 2 - radius;
-    b1.p = new THREE.Vector3(randrange(pmin, pmax),
+    b1.position.set(randrange(pmin, pmax),
         randrange(pmin, pmax),
         randrange(pmin, pmax));
-    b1.prev_p = new THREE.Vector3(b1.p.x, b1.p.y, b1.p.z);
-    b1.position.copy(b1.p);
 
     // random initial velocity
     b1.v = new THREE.Vector3(randrange(-speed, speed),
         randrange(-speed, speed),
         randrange(-speed, speed));
-
-    b1.next_v = new THREE.Vector3(b1.v.x, b1.v.y, b1.v.z);
+    // temp speed
+    b1.next_v = new THREE.Vector3(0, 0, 0);
 
     // zero initial acceleration
     b1.a = new THREE.Vector3(0, 0, 0);
-    b1.prev_a = new THREE.Vector3(0, 0, 0);
 
     // check overlapping balls, move their centers away
     for (var j = 0; j < i; j++) {
@@ -175,10 +172,6 @@ for (var i = 0; i < maxcount; i++) {
                 normal = normal.multiplyScalar(delta / 2.0);
                 b1.position.add(normal);
                 b2.position.sub(normal);
-                b1.p.copy(b1.position);
-                b1.prev_p.copy(b1.position);
-                b2.p.copy(b2.position);
-                b2.prev_p.copy(b2.position);
             }
         }
     }
@@ -221,42 +214,34 @@ for(var i = 0; i < count; i += 1)
 {
             var b1 = balls[i];
     var r = range - b1.r;
-if (i == 0) b1.p.set(0,0,r);
-else if (i == 1) b1.p.set(0,0,-r);
+if (i == 0) b1.position.set(0,0,r);
+else if (i == 1) b1.position.set(0,0,-r);
 else {
     var theta = (i - 2) * goldenRatio;
     var phi = Math.acos(1 - 2*(i-2+epsilon)/(count-3+2*epsilon));
-            b1.p.x = Math.cos(theta) * Math.sin(phi) * r;
-            b1.p.y = Math.sin(theta) * Math.sin(phi) * r;
-            b1.p.z = Math.cos(phi) * r;
+            b1.position.x = Math.cos(theta) * Math.sin(phi) * r;
+            b1.position.y = Math.sin(theta) * Math.sin(phi) * r;
+            b1.position.z = Math.cos(phi) * r;
 }
-            b1.position.copy(b1.p);
-            b1.prev_p.copy(b1.p);
             b1.v.set(0.0,0.0,0.0);
-            b1.next_v.copy(b1.v);
-            b1.a.copy(b1.v);
-            b1.prev_a.copy(b1.v);
+            b1.a.set(0.0,0.0,0.0);
 }
 }
 
 // reset positions to evenly spaced balls (fibonacci spiral)
 function resetPositionsFibonacci() {
         var s5 = Math.PI * (1 + Math.sqrt(5.0));
-        for (var i = 0; i < 0 && i < count; i++) {
+        for (var i = 0; i < count; i++) {
             var b1 = balls[i];
             var indice = 0.5 + i;
             var phi = Math.acos(1 - 2.0*indice/count);
             var theta = s5 * indice;
             var r = range - b1.r;
-            b1.p.x = Math.cos(theta) * Math.sin(phi) * r;
-            b1.p.y = Math.sin(theta) * Math.sin(phi) * r;
-            b1.p.z = Math.cos(phi) * r;
-            b1.position.copy(b1.p);
-            b1.prev_p.copy(b1.p);
+            b1.position.x = Math.cos(theta) * Math.sin(phi) * r;
+            b1.position.y = Math.sin(theta) * Math.sin(phi) * r;
+            b1.position.z = Math.cos(phi) * r;
             b1.v.set(0.0,0.0,0.0);
-            b1.next_v.copy(b1.v);
-            b1.a.copy(b1.v);
-            b1.prev_a.copy(b1.v);
+            b1.a.set(0.0,0.0,0.0);
         }
 }
 
@@ -268,6 +253,13 @@ function render() {
     for (var i = 0; i < count; i++) {
 
         var b1 = balls[i];
+	b1.v.add(b1.a);
+	b1.next_v.copy(b1.v);
+    }
+
+    for (var i = 0; i < count; i++) {
+
+        var b1 = balls[i];
 
         for (var j = i + 1; j < count; j++) {
 
@@ -275,7 +267,7 @@ function render() {
             var mindistance = b1.r + b2.r;
 
             // check overlap between balls (collision in the past)
-            separation.copy(b1.p).sub(b2.p);
+            separation.copy(b1.position).sub(b2.position);
 
             // simple check of overlapping balls
             if (Math.abs(separation.x) <= mindistance &&
@@ -289,13 +281,13 @@ function render() {
                     normal.copy(separation).normalize();
                     var delta = mindistance - len;
                     normal = normal.multiplyScalar(delta / 2.0);
-                    b1.p.add(normal);
-                    b2.p.sub(normal);
+                    b1.position.add(normal);
+                    b2.position.sub(normal);
                 }
             }
 
             // check future collision between balls
-            separation.copy(b1.p).add(b1.v).add(b1.a).sub(b2.p).sub(b2.v).sub(b2.a);
+            separation.copy(b1.position).add(b1.v).sub(b2.position).sub(b2.v);
             // simple check first
             if (Math.abs(separation.x) <= mindistance &&
                 Math.abs(separation.y) <= mindistance &&
@@ -305,7 +297,7 @@ function render() {
                 // exchange normal weighted velocities, leave tangential alone
                 if (separation.length() < mindistance) {
                     // normal direction of impact
-                    normal.copy(b2.p).sub(b1.p).normalize();
+                    normal.copy(b2.position).sub(b1.position).normalize();
                     // impact speed
                     relativeVelocity.copy(b1.v).sub(b2.v);
                     var mdot = 2.0 * relativeVelocity.dot(normal) / (b1.m + b2.m) * amortize;
@@ -336,7 +328,7 @@ function render() {
 
         for (var j = i + 1; j < count; j++) {
             b2 = balls[j];
-            separation.copy(b1.p).sub(b2.p);
+            separation.copy(b1.position).sub(b2.position);
             var distance = separation.length();
             var m = b1.m * b2.m;
 
@@ -358,28 +350,23 @@ function render() {
 
         var b1 = balls[i];
 
-        // leapfrog https://en.wikipedia.org/wiki/Leapfrog_integration`
-        b1.v.add(b1.prev_a);
-        b1.p.add(b1.v);
+        // leapfrog https://en.wikipedia.org/wiki/Leapfrog_integration
+	b1.a.multiplyScalar(0.5);
         b1.v.add(b1.a);
+        b1.position.add(b1.v);
 
         // check collision with bounding sphere and bounce if needed
-        if (b1.p.length() + b1.r > range) {
+        if (b1.position.length() + b1.r > range) {
             // normal direction of impact
-            normal.copy(b1.p).normalize();
+            normal.copy(b1.position).normalize();
             // next position
-            b1.p.copy(normal).multiplyScalar(range - b1.r);
+            b1.position.copy(normal).multiplyScalar(range - b1.r);
             // impact speed
-            relativeVelocity.copy(b1.next_v);
+            relativeVelocity.copy(b1.v);
             var mdot = 2.0 * relativeVelocity.dot(normal) * amortize;
             b1.v.sub(normal.multiplyScalar(mdot));
             b1.a.set(0, 0, 0);
         }
-
-        b1.position.copy(b1.prev_p);
-        b1.prev_p.copy(b1.p);
-        b1.next_v.copy(b1.v);
-        b1.prev_a.copy(b1.a);
     }
 }
 
