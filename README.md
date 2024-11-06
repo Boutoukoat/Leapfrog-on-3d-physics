@@ -12,7 +12,8 @@ for a better stability and improved rendering</p>
 
 <p>The file [attraction_repulsion_3d](https://boutoukoat.github.io/attraction_repulsion_3d.html) shows a red sphere attracting green spheres while the green spheres repulse themselves, all together constrained in a cube.</p>
 
-<p>The file [repulsion_3d](https://boutoukoat.github.io/repulsion_3d.html) shows a variable number of repulsing green spheres with an initial random speed, constrained in a sphere. 4 spheres should converge to the vertices of a regular tetrapod. Will this stabilize numerically ? 8 spheres should converge to the corners of a cube. Will this be numeroically stable ?</p>
+<p>The file [repulsion_3d](https://boutoukoat.github.io/repulsion_3d.html) shows a variable number of repulsing green spheres with an initial random speed, constrained in a sphere. 4 spheres should converge to the vertices of a regular tetrapod. Will this stabilize numerically ? 8 spheres should converge to the corners of a cube. Will this be numerically stable ?</p>
+<p>To verify possible convergences, it is possible to reinitailize the positions of the spheres. A first possibility if to fill the sphere surface with the fibonacci spiral. An other possibility is to fill the sphere with platonic polyhedrons. Depending on the number of spheres, there are insteresting geometrical evolutions, but it looks like, due to numerical accuracies, it is not very stable over time.</p>
 
 # Bugs fixed in original source code
  
@@ -27,7 +28,7 @@ for a better stability and improved rendering</p>
 # Improvements
 
  The aim is not to build an exact physics engine. This task is impossible within a few hundreds lines of code.
- The aim is to make a realistic animation without side effects 
+ The aim is to make a realistic animation without visible side effects 
 
 # Usual algorithm (from wikipedia)
 

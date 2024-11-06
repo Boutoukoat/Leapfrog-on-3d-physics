@@ -197,35 +197,223 @@ function setActiveCount(newCount) {
     }
 }
 
-// reset positions to evenly spaced balls (modified fibonacci spiral)
-function resetPositions() {
-var epsilon = 25;
-if (count >= 40000)
-  epsilon = 25;
-else if (count >= 1000)
-  epsilon = 10;
-else if (count >= 80)
-  epsilon = 3.33;
-else
-  epsilon = 2.66;
-
-var goldenRatio = 4 * Math.PI /(1 + Math.sqrt(5));
-for(var i = 0; i < count; i += 1)
-{
+function normalizePositions() {
+	for(var i = 0; i < count; i += 1)
+	{
             var b1 = balls[i];
-    var r = range - b1.r;
-if (i == 0) b1.position.set(0,0,r);
-else if (i == 1) b1.position.set(0,0,-r);
-else {
-    var theta = (i - 2) * goldenRatio;
-    var phi = Math.acos(1 - 2*(i-2+epsilon)/(count-3+2*epsilon));
-            b1.position.x = Math.cos(theta) * Math.sin(phi) * r;
-            b1.position.y = Math.sin(theta) * Math.sin(phi) * r;
-            b1.position.z = Math.cos(phi) * r;
-}
+	    var r = range - b1.r;
             b1.v.set(0.0,0.0,0.0);
             b1.a.set(0.0,0.0,0.0);
+	    if (b1.position.x*b1.position.x + b1.position.y*b1.position.y + b1.position.z*b1.position.z != 0)
+	    {
+	    b1.position.normalize().multiplyScalar(r);
+	    }
+	}
 }
+
+function platonicSolids(d) {
+	if (d == 4)
+	{
+	    phi = 1/Math.sqrt(2);
+	    balls[0].position.set(1,0,-phi);
+	    balls[1].position.set(-1,0,-phi);
+	    balls[2].position.set(0,1,phi);
+	    balls[3].position.set(0,-1,phi);
+		return 1;
+	}
+	
+	if (d == 6)
+	{
+	    balls[0].position.set(1,0,0);
+	    balls[1].position.set(-1,0,0);
+	    balls[2].position.set(0,0,1);
+	    balls[3].position.set(0,0,-1);
+	    balls[4].position.set(0,1,0);
+	    balls[5].position.set(0,-1,0);
+		return 1;
+	}
+
+	if (d == 8)
+	{
+	    phi = (1 + Math.sqrt(5))/2;
+	    balls[0].position.set(1,1,1);
+	    balls[1].position.set(1,1,-1);
+	    balls[2].position.set(1,-1,1);
+	    balls[3].position.set(1,-1,-1);
+	    balls[4].position.set(-1,1,1);
+	    balls[5].position.set(-1,1,-1);
+	    balls[6].position.set(-1,-1,1);
+	    balls[7].position.set(-1,-1,-1);
+		return 1;
+	}
+	
+	if (d == 12)
+	{
+	    phi = (1 + Math.sqrt(5))/2;
+	    balls[0].position.set(0,1,phi);
+	    balls[1].position.set(0,1,-phi);
+	    balls[2].position.set(0,-1,phi);
+	    balls[3].position.set(0,-1,-phi);
+	    balls[4].position.set(phi,0,1);
+	    balls[5].position.set(phi,0,-1);
+	    balls[6].position.set(-phi,0,1);
+	    balls[7].position.set(-phi,0,-1);
+	    balls[8].position.set(1,phi,0);
+	    balls[9].position.set(1,-phi,0);
+	    balls[10].position.set(-1,phi,0);
+	    balls[11].position.set(-1,-phi,0);
+		return 1;
+	}
+
+	if (d == 20)
+	{
+	    phi = (1 + Math.sqrt(5))/2;
+	    balls[0].position.set(1,1,1);
+	    balls[1].position.set(1,1,-1);
+	    balls[2].position.set(1,-1,1);
+	    balls[3].position.set(1,-1,-1);
+	    balls[4].position.set(-1,1,1);
+	    balls[5].position.set(-1,1,-1);
+	    balls[6].position.set(-1,-1,1);
+	    balls[7].position.set(-1,-1,-1);
+	    balls[8].position.set(0,phi,1/phi);
+	    balls[9].position.set(0,phi,-1/phi);
+	    balls[10].position.set(0,-phi,1/phi);
+	    balls[11].position.set(0,-phi,-1/phi);
+	    balls[12].position.set(1/phi,0,phi);
+	    balls[13].position.set(1/phi,0,-phi);
+	    balls[14].position.set(-1/phi,0,phi);
+	    balls[15].position.set(-1/phi,0,-phi);
+	    balls[16].position.set(phi,1/phi,0);
+	    balls[17].position.set(phi,-1/phi,0);
+	    balls[18].position.set(-phi,1/phi,0);
+	    balls[19].position.set(-phi,-1/phi,0);
+		return 1;
+	}
+
+	if (d == 24)
+	{
+	    phi = (1 + Math.sqrt(5))/2;
+	    balls[0].position.set(0,1,phi);
+	    balls[1].position.set(0,1,-phi);
+	    balls[2].position.set(0,-1,phi);
+	    balls[3].position.set(0,-1,-phi);
+	    balls[4].position.set(phi,0,1);
+	    balls[5].position.set(phi,0,-1);
+	    balls[6].position.set(-phi,0,1);
+	    balls[7].position.set(-phi,0,-1);
+	    balls[8].position.set(1,phi,0);
+	    balls[9].position.set(1,-phi,0);
+	    balls[10].position.set(-1,phi,0);
+	    balls[11].position.set(-1,-phi,0);
+	    balls[12].position.set(0,phi,1);
+	    balls[13].position.set(0,-phi,1);
+	    balls[14].position.set(0,phi,-1);
+	    balls[15].position.set(0,-phi,-1);
+	    balls[16].position.set(1,0,phi);
+	    balls[17].position.set(-1,0,phi);
+	    balls[18].position.set(1,0,-phi);
+	    balls[19].position.set(-1,0,-phi);
+	    balls[20].position.set(phi,1,0);
+	    balls[21].position.set(-phi,1,0);
+	    balls[22].position.set(phi,-1,0);
+	    balls[23].position.set(-phi,-1,0);
+		return 1;
+	}
+     return 0;
+}
+
+// reset positions to evenly spaced balls (modified fibonacci spiral)
+function resetPositions() {
+	if (count == 1)
+	{
+	    balls[0].position.set(0,0,1);
+		normalizePositions();
+		return;
+	}
+	if (count == 2)
+	{
+	    balls[0].position.set(0,0,1);
+	    balls[1].position.set(0,0,-1);
+		normalizePositions();
+		return;
+	}
+	if (count == 3)
+	{
+	    c = Math.sqrt(3)/2;
+	    balls[0].position.set(0,0,1);
+	    balls[1].position.set(0,c,-1/2);
+	    balls[1].position.set(0,-c,-1/2);
+		normalizePositions();
+		return;
+	}
+
+        var d = count;
+	if (d % 2 == 1)
+	{
+	    d = d - 1;
+	    balls[d].position.set(0,0,0);
+	}
+
+	if (platonicSolids(d))
+	{
+	// 4,5,6,7,8,9, 12,13,20,21,24,25 
+		normalizePositions();
+		return;
+        }
+
+	    // 10,11,14,15,22,23,26,27
+	        d = d - 1;
+	        balls[d].position.set(0,0,1);
+	        d = d - 1;
+	        balls[d].position.set(0,0,-1);
+	        
+		if (platonicSolids(d))
+		{
+		normalizePositions();
+		return;
+        	}
+
+        d = count;
+	if (count % 2 == 1)
+	{
+	    d = d - 1;
+	    balls[d].position.set(0,0,0);
+	}
+	if (count % 4 == 2)
+	{
+	    d = d - 1;
+	    balls[d].position.set(0,0,1);
+	    d = d - 1;
+	    balls[d].position.set(0,0,-1);
+	}
+
+	var c = d / 4;
+	var angle = 2 * Math.PI / c;
+	for(var i = 0; i < c; i += 1)
+	{
+	    d = d - 1;
+            var b1 = balls[d];
+            var phi = i * angle;
+            b1.position.x = range * Math.cos(phi);
+            b1.position.y = range * Math.sin(phi);
+            b1.position.z = 2 * range / 3;
+	    d = d - 1;
+            b1 = balls[d];
+            b1.position.x = range * Math.cos(phi);
+            b1.position.y = range * Math.sin(phi);
+            b1.position.z = -2 * range / 3;
+	}
+	angle = 2 * Math.PI / d;
+	for(var i = 0; i < d; i += 1)
+	{
+            var b1 = balls[i];
+            var phi = i * angle;
+            b1.position.x = range * Math.cos(phi);
+            b1.position.y = range * Math.sin(phi);
+            b1.position.z = b1.r * (2 * (i%2) - 1);
+	}
+	normalizePositions();
 }
 
 // reset positions to evenly spaced balls (fibonacci spiral)
